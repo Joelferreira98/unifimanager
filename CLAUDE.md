@@ -10,9 +10,11 @@ Aplicação de gerenciamento de hotspot UniFi para embarcações. Gerencia vouch
 
 | Papel | Criado por | Capacidades |
 |-------|-----------|-------------|
-| `MASTER` | (único, seed) | Cria gerentes, acessa tudo |
+| `MASTER` | (único, seed) | Cria gerentes, acessa tudo, concede acesso ao relatório geral da frota |
 | `MANAGER` | Master | Cria vendedores, gerencia empresas (N:N), cria planos, gera vouchers, controla caixa |
 | `SELLER` | Manager | Vinculado a **uma** empresa; gera vouchers dessa empresa |
+
+> O MASTER pode conceder acesso ao **relatório geral da frota** a qualquer usuário que ele criou, via o campo `User.canViewGlobalReports` (toggle na página de Usuários).
 
 ## Modelo de domínio
 
@@ -39,6 +41,25 @@ Trip (Caixa/Viagem)
 ```
 
 **Regra crítica de venda:** A `Sale` é criada pelo job de sincronização (`VoucherSyncService`) quando detecta que `activatedAt` foi preenchido na API UniFi — nunca no momento da geração do voucher.
+
+## Relatórios, dashboard e insights de IA
+
+### Dashboard por mês
+A página `Dashboard` tem um navegador de mês (setas + mês por extenso em PT). **Vouchers do mês** (por `generatedAt`) e **Receita do mês** (por `Sale.registeredAt`) + o gráfico reagem ao mês selecionado; **Pendentes/Ativos** são sempre ao vivo (status atual de todos os vouchers). Tudo é filtrado no client a partir dos vouchers já carregados — sem chamada extra ao backend.
+
+### Relatórios (`ReportService`)
+- `buildCompanyReport(companyId, range)` → `CompanyReport`: resumo, `byPlan`, `bySeller` (mantido por compatibilidade, **não exibido**), `byDay` e `byTrip` (`ReportTripPoint`, numeração cronológica das viagens + variação % entre elas).
+- `buildGlobalReport(range)` → `GlobalReport`: consolida **toda a frota**; `byCompany` ordenado por **quantidade de vendas**; `byDay` agregado.
+- A página de Relatórios (por embarcação) e o Relatório Geral compartilham o mesmo layout: StatCards volume-first, ranking com barra de participação (`MarkdownLite` é compartilhado em `client/src/components/`).
+
+### Insights de IA (`AiInsightsService`)
+- Integração **sem dependência nova**: usa `axios` para a OpenAI Chat Completions. Opt-in (botão sob demanda); sem `OPENAI_API_KEY` os relatórios funcionam e só o botão fica indisponível (rota responde 503 via `AiNotConfiguredError`).
+- **Foco do negócio (refletido nos prompts):** a métrica central é a **quantidade de vendas** (volume) por viagem/embarcação; o **vendedor é irrelevante** (não citar); planos são **personalizados por embarcação/trajeto** (não comparar entre embarcações).
+
+### Rotas e acesso (`src/routes/reports.ts`)
+- `GET /api/reports/company/:companyId` e `POST /api/reports/company/:companyId/insights` — MASTER/MANAGER (+ `companyAccessError`).
+- `GET /api/reports/global` e `POST /api/reports/global/insights` — guard `authorizeGlobalReports`: MASTER sempre; demais só com `canViewGlobalReports`.
+- `PATCH /api/users/:id/global-reports` (MASTER) concede/revoga a permissão. A flag viaja no login, no `/me` e na listagem de usuários.
 
 ## Estrutura do monorepo
 
@@ -86,12 +107,13 @@ npm run lint
 
 - **Framework**: Express.js com TypeScript
 - **ORM**: Prisma + PostgreSQL
-- **Autenticação**: JWT para sessões da aplicação; cookie de sessão UniFi para chamadas à API do controlador
+- **Autenticação**: JWT para sessões da aplicação; **API Key** (`X-API-KEY`) para chamadas à API do controlador UniFi
 - **Estrutura de pastas**:
-  - `src/routes/` — rotas Express agrupadas por domínio (`hotspot/`, `clients/`, `vouchers/`)
-  - `src/services/` — lógica de negócio; `UnifiService` encapsula todas as chamadas à API UniFi OS
-  - `src/prisma/` — schema e migrações
-  - `src/middlewares/` — auth JWT, tratamento de erros
+  - `src/routes/` — rotas Express por domínio (auth, users, companies, plans, vouchers, sales, trips, reports, …)
+  - `src/services/` — lógica de negócio: `UnifiService` (API UniFi), `VoucherSyncService` (sync periódico + criação de `Sale`), `ReportService` (relatórios), `AiInsightsService` (insights OpenAI)
+  - `src/middlewares/` — `authenticate` (JWT) e `authorize(...roles)`
+  - `src/lib/` — utilitários (`prisma`, `companyAccess`)
+  - `prisma/` — `schema.prisma` e migrações
 
 ### Frontend (`/client`)
 
@@ -155,6 +177,13 @@ UNIFI_HOST=https://192.168.1.1
 UNIFI_API_KEY=sua_api_key_gerada_no_painel
 UNIFI_SITE_ID=uuid-do-site
 JWT_SECRET=...
+JWT_EXPIRES_IN=8h
+VOUCHER_SYNC_INTERVAL_MINUTES=2
+
+# Insights de IA (opcional). Sem a chave, os relatórios funcionam;
+# só o botão "Gerar insights" fica indisponível.
+OPENAI_API_KEY=
+OPENAI_MODEL=gpt-4o-mini
 ```
 
 ## Banco de dados
