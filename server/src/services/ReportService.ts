@@ -82,7 +82,7 @@ const dayFmt = new Intl.DateTimeFormat('en-CA', {
   day: '2-digit',
 })
 
-function localDay(date: Date): string {
+export function localDay(date: Date): string {
   return dayFmt.format(date)
 }
 

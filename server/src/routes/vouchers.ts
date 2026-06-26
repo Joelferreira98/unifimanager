@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { z } from 'zod'
-import { Role, VoucherStatus } from '@prisma/client'
+import { Prisma, Role, VoucherStatus } from '@prisma/client'
 import { prisma } from '../lib/prisma'
 import { authenticate, authorize } from '../middlewares/auth'
 import { companyAccessError } from '../lib/companyAccess'
@@ -216,15 +216,43 @@ vouchersRoutes.post('/import', authorize(Role.MASTER, Role.MANAGER, Role.SELLER)
 vouchersRoutes.get('/', authorize(Role.MASTER, Role.MANAGER, Role.SELLER), async (req, res) => {
   const { tripId, status, companyId, planId } = req.query
 
+  // Escopo de empresa por papel — nenhum usuário pode listar vouchers de empresas
+  // fora do seu alcance. SELLER: a própria empresa. MANAGER: apenas as que gerencia.
+  // MASTER: todas (ou a empresa pedida).
+  let companyScope: Prisma.VoucherWhereInput
+  if (req.user.role === Role.SELLER) {
+    companyScope = { companyId: req.user.companyId }
+  } else if (req.user.role === Role.MANAGER) {
+    const managed = await prisma.managerCompany.findMany({
+      where: { managerId: req.user.userId },
+      select: { companyId: true },
+    })
+    const managedIds = managed.map((m) => m.companyId)
+    if (companyId) {
+      if (!managedIds.includes(String(companyId))) {
+        res.status(403).json({ message: 'Você não gerencia essa empresa' })
+        return
+      }
+      companyScope = { companyId: String(companyId) }
+    } else {
+      companyScope = { companyId: { in: managedIds } }
+    }
+  } else {
+    companyScope = companyId ? { companyId: String(companyId) } : {}
+  }
+
+  // Valida o status contra o enum para não vazar erro do Prisma (status inválido → ignora).
+  const statusFilter =
+    status && (Object.values(VoucherStatus) as string[]).includes(String(status))
+      ? { status: status as VoucherStatus }
+      : {}
+
   const vouchers = await prisma.voucher.findMany({
     where: {
       ...(tripId ? { tripId: String(tripId) } : {}),
-      ...(status ? { status: status as any } : {}),
-      ...(companyId ? { companyId: String(companyId) } : {}),
+      ...statusFilter,
       ...(planId ? { planId: String(planId) } : {}),
-      // SELLER vê todos os vouchers da própria empresa (um vendedor por embarcação);
-      // o filtro fica por último para sobrepor qualquer companyId vindo da query.
-      ...(req.user.role === Role.SELLER ? { companyId: req.user.companyId } : {}),
+      ...companyScope,
     },
     include: {
       plan: { select: { name: true, price: true, timeLimitMinutes: true } },

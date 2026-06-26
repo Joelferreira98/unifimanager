@@ -15,6 +15,7 @@ import { sitesRoutes } from './routes/sites'
 import { settingsRoutes } from './routes/settings'
 import { voucherTemplatesRoutes } from './routes/voucherTemplates'
 import { reportsRoutes } from './routes/reports'
+import { dashboardRoutes } from './routes/dashboard'
 import { startVoucherSyncJob } from './jobs/syncVouchers'
 
 const app = express()
@@ -34,6 +35,7 @@ app.use('/api/sites', sitesRoutes)
 app.use('/api/settings', settingsRoutes)
 app.use('/api/voucher-templates', voucherTemplatesRoutes)
 app.use('/api/reports', reportsRoutes)
+app.use('/api/dashboard', dashboardRoutes)
 
 app.use(errorHandler)
 

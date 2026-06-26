@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Row, Col, Card, Typography, Empty, Button, Space } from 'antd'
+import { Row, Col, Card, Typography, Empty, Button, Space, Spin } from 'antd'
 import {
   WifiOutlined,
   ClockCircleOutlined,
@@ -11,10 +11,9 @@ import {
 import dayjs, { type Dayjs } from 'dayjs'
 import { useCompanyStore } from '../store/companyStore'
 import { useAuthStore } from '../store/authStore'
-import { useVouchers } from '../hooks/useVouchers'
+import { useDashboardSummary } from '../hooks/useDashboard'
 import StatCard, { GRADIENTS } from '../components/StatCard'
 import RevenueChart, { type RevenuePoint } from '../components/RevenueChart'
-import type { Voucher } from '../types'
 
 const MESES = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -25,47 +24,33 @@ function monthLabel(m: Dayjs) {
   return `${MESES[m.month()]} de ${m.year()}`
 }
 
-// Receita por dia do mês selecionado (1 ponto por dia do mês).
-function buildRevenueSeries(vouchers: Voucher[], month: Dayjs): RevenuePoint[] {
+// Receita por dia do mês selecionado (1 ponto por dia, preenchendo zeros).
+function buildRevenueSeries(byDay: { date: string; revenue: number }[], month: Dayjs): RevenuePoint[] {
   const days = month.daysInMonth()
+  const ym = month.format('YYYY-MM')
   const mm = String(month.month() + 1).padStart(2, '0')
-  const buckets = new Array(days).fill(0)
+  const map = new Map(byDay.map((d) => [d.date, d.revenue]))
 
-  for (const v of vouchers) {
-    if (!v.sale) continue
-    const d = dayjs(v.sale.registeredAt)
-    if (d.isSame(month, 'month')) buckets[d.date() - 1] += Number(v.sale.amount)
-  }
-
-  return buckets.map((value, i) => ({
-    label: `${String(i + 1).padStart(2, '0')}/${mm}`,
-    value: Number(value.toFixed(2)),
-  }))
+  return Array.from({ length: days }, (_, i) => {
+    const dd = String(i + 1).padStart(2, '0')
+    return {
+      label: `${dd}/${mm}`,
+      value: Number((map.get(`${ym}-${dd}`) ?? 0).toFixed(2)),
+    }
+  })
 }
 
 export default function DashboardPage() {
   const user = useAuthStore((s) => s.user)
   const { selectedCompanyId } = useCompanyStore()
-  const { data: vouchers = [] } = useVouchers({ companyId: selectedCompanyId })
 
   const [month, setMonth] = useState<Dayjs>(dayjs().startOf('month'))
   const isCurrentMonth = month.isSame(dayjs(), 'month')
 
-  // Vouchers gerados no mês selecionado alimentam os contadores;
-  // a receita usa a data da venda (registeredAt), conforme a regra de negócio.
-  const monthVouchers = vouchers.filter((v) => dayjs(v.generatedAt).isSame(month, 'month'))
+  const range = { from: month.startOf('month').toISOString(), to: month.endOf('month').toISOString() }
+  const { data: summary, isLoading } = useDashboardSummary(selectedCompanyId, range)
 
-  const stats = {
-    // Vouchers e receita são do mês selecionado.
-    total: monthVouchers.length,
-    revenue: vouchers
-      .filter((v) => v.sale && dayjs(v.sale.registeredAt).isSame(month, 'month'))
-      .reduce((s, v) => s + Number(v.sale!.amount), 0),
-    // Pendentes/Ativos são sempre ao vivo (status atual de todos os vouchers).
-    pending: vouchers.filter((v) => v.status === 'PENDING').length,
-    active: vouchers.filter((v) => v.status === 'ACTIVE').length,
-  }
-  const series = buildRevenueSeries(vouchers, month)
+  const series = buildRevenueSeries(summary?.byDay ?? [], month)
 
   return (
     <>
@@ -102,20 +87,21 @@ export default function DashboardPage() {
                 Mês atual
               </Button>
             )}
+            {isLoading && <Spin size="small" />}
           </Space>
 
           <Row gutter={[16, 16]}>
             <Col xs={24} sm={12} xl={6}>
-              <StatCard title="Vouchers no mês" value={stats.total} icon={<WifiOutlined />} gradient={GRADIENTS.blue} />
+              <StatCard title="Vouchers no mês" value={summary?.total ?? 0} icon={<WifiOutlined />} gradient={GRADIENTS.blue} />
             </Col>
             <Col xs={24} sm={12} xl={6}>
-              <StatCard title="Pendentes" value={stats.pending} icon={<ClockCircleOutlined />} gradient={GRADIENTS.orange} />
+              <StatCard title="Pendentes" value={summary?.pending ?? 0} icon={<ClockCircleOutlined />} gradient={GRADIENTS.orange} />
             </Col>
             <Col xs={24} sm={12} xl={6}>
-              <StatCard title="Ativos" value={stats.active} icon={<ThunderboltOutlined />} gradient={GRADIENTS.green} />
+              <StatCard title="Ativos" value={summary?.active ?? 0} icon={<ThunderboltOutlined />} gradient={GRADIENTS.green} />
             </Col>
             <Col xs={24} sm={12} xl={6}>
-              <StatCard title="Receita do mês" value={`R$ ${stats.revenue.toFixed(2)}`} icon={<DollarOutlined />} gradient={GRADIENTS.purple} />
+              <StatCard title="Receita do mês" value={`R$ ${(summary?.revenue ?? 0).toFixed(2)}`} icon={<DollarOutlined />} gradient={GRADIENTS.purple} />
             </Col>
           </Row>
 
