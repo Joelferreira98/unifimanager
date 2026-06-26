@@ -119,3 +119,9 @@ Revisão completa do backend (rotas, serviços, job de sync, auth) e das superf�
 **Não corrigidos (aceitáveis no cenário atual):** `missCounts` do sync em memória (só relevante se escalar para cluster; PM2 hoje é fork/1 instância) e `createVouchers` sem transação (vouchers órfãos no UniFi são recuperáveis via `/importable`).
 
 **Pontos fortes confirmados:** controle de acesso por empresa via `companyAccessError`; venda criada no sync caindo no caixa aberto no momento do uso; idempotência via `Sale.voucherId @unique`; erros centralizados + Zod; sem `dangerouslySetInnerHTML`; segredos fora do git.
+
+## Dashboard "Vendas no mês" batendo com o relatório (commit `b59aa95`)
+- **Sintoma reportado:** o total do dashboard não batia com o relatório na empresa ANNA KAROLINA II.
+- **Causa:** não era erro de cálculo — métricas diferentes. O dashboard mostrava **"Vouchers no mês" (gerados = 790)** e o relatório mostra **"Vendas" (vouchers conectados = 260)**. A **Receita** já batia nos dois (R$ 4.740). Confirmado por consulta direta ao banco.
+- **Correção:** o card virou **"Vendas no mês"** (vouchers conectados), igual ao relatório. `dashboard.ts` retorna `salesCount` (= `sales.length`) no lugar de `total` (removida a contagem de vouchers gerados); `useDashboard.ts` e `Dashboard.tsx` atualizados (ícone `ShoppingCartOutlined`). Pendentes/Ativos seguem ao vivo; Receita inalterada.
+- **Limpeza de dados (sem código):** havia duas empresas "ANNA KAROLINA II" — a inativa (`60227984…`, mesmo `unifiSiteId`) era um cadastro duplicado **vazio** (0 vouchers/vendas/planos/vendedores, só 1 viagem auto-criada) e invisível na UI (filtros `active:true`). Removida via transação (viagem + empresa) após guarda confirmando 0 vouchers/vendas. Nenhum dado real afetado.
