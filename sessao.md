@@ -99,3 +99,10 @@ Implementar uma página de **Relatórios** com **insights gerados por IA** sobre
 ## Remoção do vendedor da página de Relatórios
 - `Reports.tsx`: removidos o StatCard "Vendedores ativos" (linha agora com 3 cards: Receita, Vendas, Ticket médio) e a tabela "Por vendedor" (a tabela "Por plano" passou a ocupar a largura total). Ícone `TeamOutlined` removido dos imports.
 - Backend mantém `bySeller` no `CompanyReport` (compatibilidade); apenas não é mais exibido. A IA já ignorava o vendedor.
+
+## Relatórios (por embarcação) espelhando o Relatório Geral
+- `Reports.tsx` reestruturado para o mesmo layout do `GlobalReports.tsx`:
+  - StatCards em ordem **volume-first**: Vendas → Receita → Ticket médio.
+  - Tabela "Por plano" substituída por **"Ranking de planos por vendas"** no padrão do ranking de embarcações: posição `#`, plano, **Vendas com barra de progresso** (`Progress`), **Participação %** no total e Receita — ordenado por quantidade de vendas (client-side).
+  - Sequência: Cards → Ranking de planos → Evolução por viagem (gráfico + tabela) → Receita por dia → Insights de IA.
+- `breakdownColumns` removido (não mais usado); `Progress` adicionado aos imports.

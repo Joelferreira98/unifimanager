@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import {
   Card, Row, Col, Table, Typography, Empty, Spin, Button, DatePicker, Space,
-  Tag, Alert, Tooltip,
+  Tag, Alert, Tooltip, Progress,
 } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import {
@@ -51,21 +51,6 @@ const tripColumns: ColumnsType<ReportTripPoint & { prevRevenue: number | null }>
   { title: 'vs. anterior', key: 'var', width: 100, align: 'right', render: (_, r) => <VarTag curr={r.revenue} prev={r.prevRevenue} /> },
 ]
 
-const breakdownColumns = (label: string): ColumnsType<ReportBreakdownItem> => [
-  { title: label, dataIndex: 'name', key: 'name', ellipsis: true },
-  { title: 'Vendas', dataIndex: 'salesCount', key: 'salesCount', width: 90, align: 'right' },
-  {
-    title: 'Receita',
-    dataIndex: 'revenue',
-    key: 'revenue',
-    width: 130,
-    align: 'right',
-    render: (v: number) => (
-      <Typography.Text strong style={{ color: '#52c41a' }}>{fmtCurrency(v)}</Typography.Text>
-    ),
-  },
-]
-
 export default function ReportsPage() {
   const { selectedCompanyId } = useCompanyStore()
   const [range, setRange] = useState<[Dayjs, Dayjs]>([dayjs().subtract(30, 'day').startOf('day'), dayjs().endOf('day')])
@@ -93,6 +78,48 @@ export default function ReportsPage() {
     ...t,
     prevRevenue: i > 0 ? arr[i - 1].revenue : null,
   }))
+
+  // Ranking de planos por quantidade de vendas (mesmo padrão do relatório geral).
+  const planRows = [...(report?.byPlan ?? [])].sort((a, b) => b.salesCount - a.salesCount || b.revenue - a.revenue)
+  const maxPlanSales = Math.max(1, ...planRows.map((p) => p.salesCount))
+  const totalSales = report?.summary.salesCount ?? 0
+
+  const planColumns: ColumnsType<ReportBreakdownItem> = [
+    {
+      title: '#',
+      key: 'rank',
+      width: 48,
+      render: (_, _r, i) => <Typography.Text strong>{i + 1}</Typography.Text>,
+    },
+    { title: 'Plano', dataIndex: 'name', key: 'name', ellipsis: true },
+    {
+      title: 'Vendas',
+      dataIndex: 'salesCount',
+      key: 'salesCount',
+      width: 160,
+      render: (v: number) => (
+        <Space direction="vertical" size={0} style={{ width: '100%' }}>
+          <Typography.Text strong>{v}</Typography.Text>
+          <Progress percent={Math.round((v / maxPlanSales) * 100)} showInfo={false} size="small" strokeColor="#21a9ff" />
+        </Space>
+      ),
+    },
+    {
+      title: 'Participação',
+      key: 'share',
+      width: 100,
+      align: 'right',
+      render: (_, r) => `${totalSales > 0 ? ((r.salesCount / totalSales) * 100).toFixed(1) : '0.0'}%`,
+    },
+    {
+      title: 'Receita',
+      dataIndex: 'revenue',
+      key: 'revenue',
+      width: 130,
+      align: 'right',
+      render: (v: number) => <Typography.Text strong style={{ color: '#52c41a' }}>{fmtCurrency(v)}</Typography.Text>,
+    },
+  ]
 
   const insightsErr = insights.error as { response?: { status?: number; data?: { message?: string } } } | null
 
@@ -135,15 +162,30 @@ export default function ReportsPage() {
         <>
           <Row gutter={[16, 16]}>
             <Col xs={24} sm={8}>
-              <StatCard title="Receita" value={fmtCurrency(report.summary.totalRevenue)} icon={<DollarOutlined />} gradient={GRADIENTS.green} />
+              <StatCard title="Vendas" value={report.summary.salesCount} icon={<ShoppingCartOutlined />} gradient={GRADIENTS.blue} />
             </Col>
             <Col xs={12} sm={8}>
-              <StatCard title="Vendas" value={report.summary.salesCount} icon={<ShoppingCartOutlined />} gradient={GRADIENTS.blue} />
+              <StatCard title="Receita" value={fmtCurrency(report.summary.totalRevenue)} icon={<DollarOutlined />} gradient={GRADIENTS.green} />
             </Col>
             <Col xs={12} sm={8}>
               <StatCard title="Ticket médio" value={fmtCurrency(report.summary.avgTicket)} icon={<TagOutlined />} gradient={GRADIENTS.purple} />
             </Col>
           </Row>
+
+          <Card title="Ranking de planos por vendas">
+            {planRows.length > 0 ? (
+              <Table
+                rowKey="id"
+                size="small"
+                dataSource={planRows}
+                columns={planColumns}
+                pagination={false}
+                scroll={{ x: 'max-content' }}
+              />
+            ) : (
+              <Empty description="Sem vendas no período" />
+            )}
+          </Card>
 
           {/* Evolução por viagem — ciclo central do negócio */}
           <Card title="Evolução por viagem (caixa)">
@@ -192,17 +234,6 @@ export default function ReportsPage() {
                 Clique em “Gerar insights com IA” para uma análise do período selecionado.
               </Typography.Text>
             )}
-          </Card>
-
-          <Card title="Por plano" extra={<Tag color="blue">{report.byPlan.length}</Tag>}>
-            <Table
-              rowKey="id"
-              size="small"
-              dataSource={report.byPlan}
-              columns={breakdownColumns('Plano')}
-              pagination={false}
-              locale={{ emptyText: 'Sem vendas no período' }}
-            />
           </Card>
         </>
       )}
