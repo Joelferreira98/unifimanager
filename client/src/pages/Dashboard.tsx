@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Row, Col, Card, Typography, Empty, Button, Space, Spin } from 'antd'
 import {
-  WifiOutlined,
+  ShoppingCartOutlined,
   ClockCircleOutlined,
   ThunderboltOutlined,
   DollarOutlined,
@@ -92,7 +92,7 @@ export default function DashboardPage() {
 
           <Row gutter={[16, 16]}>
             <Col xs={24} sm={12} xl={6}>
-              <StatCard title="Vouchers no mês" value={summary?.total ?? 0} icon={<WifiOutlined />} gradient={GRADIENTS.blue} />
+              <StatCard title="Vendas no mês" value={summary?.salesCount ?? 0} icon={<ShoppingCartOutlined />} gradient={GRADIENTS.blue} />
             </Col>
             <Col xs={24} sm={12} xl={6}>
               <StatCard title="Pendentes" value={summary?.pending ?? 0} icon={<ClockCircleOutlined />} gradient={GRADIENTS.orange} />

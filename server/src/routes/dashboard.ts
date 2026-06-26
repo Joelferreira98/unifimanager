@@ -18,8 +18,9 @@ const rangeSchema = z.object({
 /**
  * Resumo do dashboard de uma empresa para o período (mês) informado, calculado no
  * banco — evita o limite de 500 vouchers da listagem, que tornava meses antigos
- * incompletos. Vouchers do mês e receita são do período; pendentes/ativos são
- * sempre ao vivo (status atual de todos os vouchers da empresa).
+ * incompletos. Vendas (vouchers conectados) e receita são do período, batendo com
+ * o relatório; pendentes/ativos são sempre ao vivo (status atual de todos os
+ * vouchers da empresa).
  */
 dashboardRoutes.get('/company/:companyId', async (req, res) => {
   const accessErr = await companyAccessError(req.user, req.params.companyId)
@@ -31,8 +32,7 @@ dashboardRoutes.get('/company/:companyId', async (req, res) => {
   const { from, to } = rangeSchema.parse(req.query)
   const companyId = req.params.companyId
 
-  const [total, pending, active, sales] = await Promise.all([
-    prisma.voucher.count({ where: { companyId, generatedAt: { gte: from, lte: to } } }),
+  const [pending, active, sales] = await Promise.all([
     prisma.voucher.count({ where: { companyId, status: VoucherStatus.PENDING } }),
     prisma.voucher.count({ where: { companyId, status: VoucherStatus.ACTIVE } }),
     prisma.sale.findMany({
@@ -52,7 +52,8 @@ dashboardRoutes.get('/company/:companyId', async (req, res) => {
 
   const round2 = (n: number) => Math.round(n * 100) / 100
   res.json({
-    total,
+    // Vendas = vouchers conectados no período (mesma definição do relatório).
+    salesCount: sales.length,
     revenue: round2(revenue),
     pending,
     active,

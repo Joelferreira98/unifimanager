@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { api } from '../services/api'
 
 export interface DashboardSummary {
-  total: number // vouchers gerados no período
+  salesCount: number // vendas (vouchers conectados) no período — bate com o relatório
   revenue: number // receita do período
   pending: number // ao vivo
   active: number // ao vivo
