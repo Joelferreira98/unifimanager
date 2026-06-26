@@ -106,3 +106,16 @@ Implementar uma página de **Relatórios** com **insights gerados por IA** sobre
   - Tabela "Por plano" substituída por **"Ranking de planos por vendas"** no padrão do ranking de embarcações: posição `#`, plano, **Vendas com barra de progresso** (`Progress`), **Participação %** no total e Receita — ordenado por quantidade de vendas (client-side).
   - Sequência: Cards → Ranking de planos → Evolução por viagem (gráfico + tabela) → Receita por dia → Insights de IA.
 - `breakdownColumns` removido (não mais usado); `Progress` adicionado aos imports.
+
+## Revisão da aplicação — correções (commits `581bc8c` e `6e9f7c2`)
+Revisão completa do backend (rotas, serviços, job de sync, auth) e das superfícies recentes do front. Achados corrigidos:
+
+- **#1 [Alto] Vazamento entre empresas em `GET /api/vouchers`** (`routes/vouchers.ts`): a listagem só restringia o SELLER. Agora escopa por papel **antes** da query — MANAGER limitado às empresas que gerencia (403 para `companyId` fora do alcance; sem `companyId`, filtra por `companyId IN (geridas)`); MASTER vê tudo. Bônus: `status` validado contra o enum (antes `as any` virava 500).
+- **#2 [Médio] Dashboard mensal incompleto** (novo `routes/dashboard.ts`): o dashboard filtrava no client uma lista capada em `take: 500` e sem recorte de data, deixando meses antigos incompletos. Criado `GET /api/dashboard/company/:id?from&to` que calcula no banco (vouchers/receita do período + `byDay`; pendentes/ativos ao vivo). `Dashboard.tsx` agora usa `useDashboardSummary`. `localDay` exportado do `ReportService`.
+- **#3 [Baixo] `GET /api/sites`** restrito a `MASTER` (não expor topologia a MANAGER/SELLER).
+- **#4 [Baixo] CORS** aberto → allowlist via `CORS_ORIGIN` (same-origin segue liberado; prod/nginx e dev/Vite são same-origin). Documentado no `.env.example`.
+- **#5 [Baixo] Rate limit no login** (`routes/auth.ts`): `express-rate-limit` (10/IP/15min, ignora sucessos) + `app.set('trust proxy', 1)` para o IP real atrás do nginx.
+
+**Não corrigidos (aceitáveis no cenário atual):** `missCounts` do sync em memória (só relevante se escalar para cluster; PM2 hoje é fork/1 instância) e `createVouchers` sem transação (vouchers órfãos no UniFi são recuperáveis via `/importable`).
+
+**Pontos fortes confirmados:** controle de acesso por empresa via `companyAccessError`; venda criada no sync caindo no caixa aberto no momento do uso; idempotência via `Sale.voucherId @unique`; erros centralizados + Zod; sem `dangerouslySetInnerHTML`; segredos fora do git.
