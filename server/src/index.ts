@@ -1,7 +1,7 @@
 import 'express-async-errors'
 import 'dotenv/config'
 import express from 'express'
-import cors from 'cors'
+import cors, { CorsOptions } from 'cors'
 
 import { errorHandler } from './middlewares/errorHandler'
 import { authRoutes } from './routes/auth'
@@ -20,7 +20,30 @@ import { startVoucherSyncJob } from './jobs/syncVouchers'
 
 const app = express()
 
-app.use(cors())
+// Atrás do nginx: confia no primeiro proxy para que req.ip use o X-Forwarded-For
+// (essencial para o rate limit por IP do login não tratar todos como 127.0.0.1).
+app.set('trust proxy', 1)
+
+// CORS restrito a uma allowlist (CORS_ORIGIN, separado por vírgula). Em produção o
+// front é servido na mesma origem (nginx) e em dev via proxy do Vite — ambos são
+// same-origin e não dependem destes cabeçalhos. Sem CORS_ORIGIN, nega cross-origin.
+const allowedOrigins = (process.env.CORS_ORIGIN ?? '')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean)
+
+const corsOptions: CorsOptions = {
+  origin(origin, callback) {
+    // Sem header Origin (same-origin, curl, apps server-to-server) → permite.
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true)
+      return
+    }
+    callback(new Error('Origem não permitida pelo CORS'))
+  },
+}
+
+app.use(cors(corsOptions))
 // limite maior: logo/favicon trafegam como data URL (base64)
 app.use(express.json({ limit: '12mb' }))
 
