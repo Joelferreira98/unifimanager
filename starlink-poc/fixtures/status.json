@@ -1,0 +1,53 @@
+{
+  "apiVersion": "29",
+  "dishGetStatus": {
+    "deviceInfo": {
+      "id": "ut01000000-00000000-00abcdef",
+      "hardwareVersion": "rev3_proto2",
+      "softwareVersion": "2026.04.15.mr12345",
+      "countryCode": "BR",
+      "generationNumber": "1700000000",
+      "utcOffsetS": -10800
+    },
+    "deviceState": { "uptimeS": "412875" },
+    "obstructionStats": {
+      "currentlyObstructed": false,
+      "fractionObstructed": 0.0021,
+      "validS": 3600,
+      "avgProlongedObstructionDurationS": 0,
+      "timeObstructed": 0.0019,
+      "patchesValid": 802
+    },
+    "alerts": {
+      "motorsStuck": false,
+      "thermalThrottle": false,
+      "thermalShutdown": false,
+      "mastNotNearVertical": false,
+      "unexpectedLocation": false,
+      "slowEthernetSpeeds": false,
+      "roaming": true,
+      "installPending": false,
+      "isHeating": false,
+      "powerSupplyThermalThrottle": false
+    },
+    "downlinkThroughputBps": 78451200.0,
+    "uplinkThroughputBps": 9123840.0,
+    "popPingLatencyMs": 31.7,
+    "popPingDropRate": 0.0,
+    "secondsToFirstNonemptySlot": 0,
+    "gpsStats": { "gpsValid": true, "gpsSats": 13, "noSatsAfterTtff": false },
+    "mobilityClass": "MOBILE",
+    "isSnrAboveNoiseFloor": true,
+    "isSnrPersistentlyLow": false,
+    "ethSpeeds": [1000],
+    "alignmentStats": {
+      "tiltAngleDeg": 26.8,
+      "boresightAzimuthDeg": 3.9,
+      "boresightElevationDeg": 61.4,
+      "attitudeEstimationState": "FILTER_CONVERGED",
+      "desiredBoresightAzimuthDeg": 4.2,
+      "desiredBoresightElevationDeg": 61.0
+    },
+    "readyStates": { "cady": true, "scp": true, "l1l2": true, "xphy": true, "aap": true, "rf": true }
+  }
+}

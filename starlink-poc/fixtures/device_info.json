@@ -1,0 +1,14 @@
+{
+  "apiVersion": "29",
+  "getDeviceInfo": {
+    "deviceInfo": {
+      "id": "ut01000000-00000000-00abcdef",
+      "hardwareVersion": "rev3_proto2",
+      "softwareVersion": "2026.04.15.mr12345",
+      "countryCode": "BR",
+      "generationNumber": "1700000000",
+      "bootcount": 47,
+      "utcOffsetS": -10800
+    }
+  }
+}

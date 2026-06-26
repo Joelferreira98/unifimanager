@@ -1,0 +1,8 @@
+{
+  "apiVersion": "29",
+  "getLocation": {
+    "lla": { "lat": -23.9618, "lon": -46.3322, "alt": 11.4 },
+    "source": "GPS",
+    "sigmaM": 2.1
+  }
+}

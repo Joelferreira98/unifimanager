@@ -1,0 +1,16 @@
+{
+  "apiVersion": "29",
+  "dishGetHistory": {
+    "current": "412875",
+    "popPingDropRate": [0, 0, 0, 0, 0.02, 0.15, 1, 1, 0.4, 0, 0, 0, 0, 0, 0],
+    "popPingLatencyMs": [30.1, 31.2, 29.8, 33.0, 41.5, 0, 0, 0, 52.3, 30.9, 31.0, 29.5, 30.2, 31.1, 30.0],
+    "downlinkThroughputBps": [55000000, 62000000, 48000000, 0, 0, 0, 0, 0, 31000000, 70000000, 78000000, 60000000, 59000000, 61000000, 58000000],
+    "uplinkThroughputBps": [6000000, 7000000, 5500000, 0, 0, 0, 0, 0, 3000000, 8000000, 9000000, 7000000, 6500000, 6800000, 6600000],
+    "outages": [
+      { "cause": "OBSTRUCTED", "startTimestampNs": "1718900000000000000", "durationNs": "2300000000", "didSwitch": false },
+      { "cause": "OBSTRUCTED", "startTimestampNs": "1718900120000000000", "durationNs": "1800000000", "didSwitch": false },
+      { "cause": "NO_SCHEDULE", "startTimestampNs": "1718900500000000000", "durationNs": "5400000000", "didSwitch": true },
+      { "cause": "NO_SATS", "startTimestampNs": "1718901000000000000", "durationNs": "900000000", "didSwitch": false }
+    ]
+  }
+}

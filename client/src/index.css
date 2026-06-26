@@ -1,0 +1,234 @@
+/* ============================================================
+   Tema visual inspirado no Vision UI Dashboard (dark + glass)
+   ============================================================ */
+
+:root {
+  color-scheme: dark;
+  --brand-from: #0075ff;
+  --brand-to: #21d4fd;
+  --brand-primary: #0075ff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background-color: #070b25;
+  background-image:
+    radial-gradient(at 18% 0%, color-mix(in srgb, var(--brand-from) 32%, transparent) 0px, transparent 45%),
+    radial-gradient(at 85% 8%, color-mix(in srgb, var(--brand-primary) 26%, transparent) 0px, transparent 45%),
+    radial-gradient(at 50% 100%, color-mix(in srgb, var(--brand-to) 14%, transparent) 0px, transparent 50%),
+    linear-gradient(180deg, #0b1437 0%, #060818 100%);
+  background-attachment: fixed;
+  color: #fff;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- Glassmorphism: cards ---------- */
+.ant-card {
+  background: linear-gradient(127deg, rgba(20, 27, 75, 0.62) 0%, rgba(11, 20, 55, 0.42) 100%) !important;
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 10px 35px rgba(2, 4, 20, 0.45);
+}
+.ant-card-head {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
+}
+
+/* ---------- Sidebar (Sider) ---------- */
+.ant-layout-sider {
+  background: linear-gradient(180deg, rgba(20, 27, 75, 0.55) 0%, rgba(8, 12, 35, 0.45) 100%) !important;
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ---------- Header em vidro ---------- */
+.ant-layout-header {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* ---------- Botões primários em gradiente ---------- */
+.ant-btn-primary {
+  background: linear-gradient(97deg, var(--brand-from) 0%, var(--brand-to) 100%) !important;
+  border: none !important;
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--brand-primary) 35%, transparent);
+  transition: filter 0.2s ease, transform 0.1s ease;
+}
+.ant-btn-primary:not(:disabled):hover {
+  filter: brightness(1.1);
+}
+.ant-btn-primary:not(:disabled):active {
+  transform: translateY(1px);
+}
+
+/* ---------- Menu de navegação ---------- */
+.ant-menu.ant-menu-dark,
+.ant-menu-dark .ant-menu-sub {
+  background: transparent !important;
+}
+.ant-menu-dark .ant-menu-item {
+  margin: 4px 12px;
+  width: calc(100% - 24px);
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.65);
+}
+.ant-menu-dark .ant-menu-item-selected {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #fff !important;
+}
+/* Ícone do item ativo numa "caixinha" em gradiente (assinatura Vision UI) */
+.ant-menu-dark .ant-menu-item-selected .anticon {
+  background: linear-gradient(97deg, var(--brand-from) 0%, var(--brand-to) 100%);
+  color: #fff;
+  padding: 7px;
+  border-radius: 10px;
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--brand-primary) 45%, transparent);
+}
+
+/* ---------- Tabelas ---------- */
+.ant-table {
+  background: transparent !important;
+}
+.ant-table-thead > tr > th {
+  background: rgba(255, 255, 255, 0.03) !important;
+  color: rgba(255, 255, 255, 0.55) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.6px;
+  font-weight: 600;
+}
+.ant-table-thead > tr > th::before {
+  display: none !important;
+}
+.ant-table-tbody > tr > td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+.ant-table-tbody > tr.ant-table-row:hover > td {
+  background: rgba(255, 255, 255, 0.035) !important;
+}
+.ant-table-cell-row-hover {
+  background: rgba(255, 255, 255, 0.035) !important;
+}
+
+/* ---------- Statistic ---------- */
+.ant-statistic-title {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+.ant-statistic-content {
+  color: #fff;
+  font-weight: 700;
+}
+
+/* ---------- Scrollbar ---------- */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ---------- Texto utilitário em gradiente ---------- */
+.brand-gradient {
+  background: linear-gradient(97deg, var(--brand-from) 0%, var(--brand-to) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ---------- Caixa do logo (marca) ---------- */
+.brand-box {
+  background: linear-gradient(97deg, var(--brand-from) 0%, var(--brand-to) 100%);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--brand-primary) 45%, transparent);
+}
+
+/* ---------- Caixa: bloco da viagem aberta ---------- */
+.cash-open {
+  position: relative;
+  border: 1px solid rgba(1, 181, 116, 0.35);
+  border-radius: 16px;
+  padding: 16px 16px 16px 20px;
+  margin-bottom: 24px;
+  background: linear-gradient(127deg, rgba(1, 181, 116, 0.1) 0%, rgba(1, 181, 116, 0.015) 100%);
+}
+.cash-open::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 16px;
+  bottom: 16px;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: linear-gradient(180deg, #01b574 0%, #20e3b2 100%);
+}
+.cash-open-banner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.pulse-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #20e3b2;
+  animation: pulse-dot 1.6s ease-out infinite;
+}
+@keyframes pulse-dot {
+  0% {
+    box-shadow: 0 0 0 0 rgba(32, 227, 178, 0.55);
+  }
+  70% {
+    box-shadow: 0 0 0 7px rgba(32, 227, 178, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(32, 227, 178, 0);
+  }
+}
+
+/* ---------- Drawer do menu (mobile) com o vidro da sidebar ---------- */
+.app-menu-drawer .ant-drawer-content {
+  background: linear-gradient(180deg, rgba(20, 27, 75, 0.96) 0%, rgba(8, 12, 35, 0.97) 100%);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+}
+
+/* ---------- Ajustes para telas pequenas ---------- */
+@media (max-width: 575px) {
+  .ant-card-body {
+    padding: 16px;
+  }
+  .ant-modal {
+    max-width: calc(100vw - 16px);
+    margin: 8px auto;
+  }
+  /* títulos de página um pouco menores */
+  h3.ant-typography,
+  .ant-typography h3 {
+    font-size: 20px;
+  }
+}
