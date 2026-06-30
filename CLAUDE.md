@@ -49,7 +49,7 @@ A página `Dashboard` tem um navegador de mês (setas + mês por extenso em PT).
 
 ### Relatórios (`ReportService`)
 - `buildCompanyReport(companyId, range)` → `CompanyReport`: resumo, `byPlan`, `bySeller` (mantido por compatibilidade, **não exibido**), `byDay` e `byTrip` (`ReportTripPoint`, numeração cronológica das viagens + variação % entre elas).
-- `buildGlobalReport(range)` → `GlobalReport`: consolida **toda a frota**; `byCompany` ordenado por **quantidade de vendas**; `byDay` agregado.
+- `buildGlobalReport(range, companyIds?)` → `GlobalReport`: consolida as embarcações **a que o usuário tem acesso** (sem `companyIds` = toda a frota, caso do MASTER); `byCompany` ordenado por **quantidade de vendas**; `byDay` agregado. As empresas acessíveis vêm de `accessibleCompanyIds(user)` em `lib/companyAccess.ts` (`null`=todas/MASTER; geridas para MANAGER; a própria para SELLER).
 - A página de Relatórios (por embarcação) e o Relatório Geral compartilham o mesmo layout: StatCards volume-first, ranking com barra de participação (`MarkdownLite` é compartilhado em `client/src/components/`).
 
 ### Insights de IA (`AiInsightsService`)
@@ -58,7 +58,7 @@ A página `Dashboard` tem um navegador de mês (setas + mês por extenso em PT).
 
 ### Rotas e acesso (`src/routes/reports.ts`)
 - `GET /api/reports/company/:companyId` e `POST /api/reports/company/:companyId/insights` — MASTER/MANAGER (+ `companyAccessError`).
-- `GET /api/reports/global` e `POST /api/reports/global/insights` — guard `authorizeGlobalReports`: MASTER sempre; demais só com `canViewGlobalReports`.
+- `GET /api/reports/global` e `POST /api/reports/global/insights` — guard `authorizeGlobalReports`: MASTER sempre; demais só com `canViewGlobalReports`. O relatório é **escopado por acesso**: cada usuário só vê o consolidado das embarcações a que tem acesso (MASTER = frota inteira). O prompt da IA reflete isso ("conjunto de embarcações a que o usuário tem acesso", não "frota inteira").
 - `PATCH /api/users/:id/global-reports` (MASTER) concede/revoga a permissão. A flag viaja no login, no `/me` e na listagem de usuários.
 
 ## Estrutura do monorepo
