@@ -131,7 +131,7 @@ Revisão completa do backend (rotas, serviços, job de sync, auth) e das superf�
 - **Causa:** a allowlist do CORS (item #4 da revisão) retornava **500** sempre que havia header `Origin` — e o navegador envia `Origin` até em POST same-origin. Isso quebrava o login e **toda requisição de escrita** pelo navegador. Reproduzido com `curl -H "Origin: ..."` → 500.
 - **Correção (`index.ts`):** o CORS agora **sempre libera same-origin** (compara `new URL(origin).host` com `req.headers.host`) e as origens cross listadas em `CORS_ORIGIN`; para origem não permitida, apenas **omite** os cabeçalhos CORS (o navegador bloqueia a leitura) em vez de lançar erro/500.
 - **Verificado:** same-origin → 401 com `Access-Control-Allow-Origin`; cross malicioso → sem `ACAO`; login real do master → 200.
-- **Pendência de segurança:** a senha do master ainda é a padrão do seed (`changeme`) — recomendado trocar.
+- **Status final:** ✅ login confirmado funcionando pelo navegador. Senha do master trocada (a antiga `changeme` já retorna 401); endpoint responde 401 a credenciais inválidas sem nenhum 500.
 
 ## Relatório geral escopado por acesso do usuário (commit `1a90c07`)
 - **Pedido:** o relatório geral deve consolidar só as embarcações a que o usuário tem acesso (não sempre a frota inteira).
