@@ -204,19 +204,28 @@ export async function buildCompanyReport(
 }
 
 /**
- * Consolida as vendas de TODA a frota (todas as embarcações ativas) em um período.
- * A métrica central é a quantidade de vendas por embarcação. Relatório de gestão,
- * acessível ao MASTER e a quem ele permitir.
+ * Consolida as vendas das embarcações em um período. Por padrão cobre toda a frota
+ * (todas as ativas); se `companyIds` for informado, restringe às empresas a que o
+ * usuário tem acesso. A métrica central é a quantidade de vendas por embarcação.
  */
-export async function buildGlobalReport(range: ReportRange): Promise<GlobalReport> {
+export async function buildGlobalReport(
+  range: ReportRange,
+  companyIds?: string[]
+): Promise<GlobalReport> {
+  // Filtro reutilizável: undefined → todas; array → só as informadas.
+  const companyFilter = companyIds ? { in: companyIds } : undefined
+
   const companies = await prisma.company.findMany({
-    where: { active: true },
+    where: { active: true, ...(companyFilter ? { id: companyFilter } : {}) },
     select: { id: true, name: true },
     orderBy: { name: 'asc' },
   })
 
   const sales = await prisma.sale.findMany({
-    where: { registeredAt: { gte: range.from, lte: range.to } },
+    where: {
+      registeredAt: { gte: range.from, lte: range.to },
+      ...(companyFilter ? { trip: { companyId: companyFilter } } : {}),
+    },
     select: {
       amount: true,
       registeredAt: true,
@@ -228,7 +237,7 @@ export async function buildGlobalReport(range: ReportRange): Promise<GlobalRepor
 
   // Embarcações com viagem em aberto (no máximo uma por empresa).
   const activeTrips = await prisma.trip.findMany({
-    where: { active: true },
+    where: { active: true, ...(companyFilter ? { companyId: companyFilter } : {}) },
     select: { companyId: true },
   })
   const activeTripCompanies = new Set(activeTrips.map((t) => t.companyId))

@@ -21,3 +21,17 @@ export async function companyAccessError(
   }
   return null
 }
+
+/**
+ * IDs das empresas que o usuário pode acessar. `null` = todas (MASTER).
+ * MANAGER → empresas que gerencia; SELLER → a própria (ou nenhuma).
+ */
+export async function accessibleCompanyIds(user: AuthPayload): Promise<string[] | null> {
+  if (user.role === Role.MASTER) return null
+  if (user.role === Role.SELLER) return user.companyId ? [user.companyId] : []
+  const managed = await prisma.managerCompany.findMany({
+    where: { managerId: user.userId },
+    select: { companyId: true },
+  })
+  return managed.map((m) => m.companyId)
+}

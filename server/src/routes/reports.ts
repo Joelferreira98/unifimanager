@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { Role } from '@prisma/client'
 import { prisma } from '../lib/prisma'
 import { authenticate, authorize } from '../middlewares/auth'
-import { companyAccessError } from '../lib/companyAccess'
+import { companyAccessError, accessibleCompanyIds } from '../lib/companyAccess'
 import { buildCompanyReport, buildGlobalReport, type ReportRange } from '../services/ReportService'
 import { aiInsightsService, AiNotConfiguredError } from '../services/AiInsightsService'
 
@@ -47,13 +47,16 @@ async function authorizeGlobalReports(req: Request, res: Response, next: NextFun
 
 reportsRoutes.get('/global', authorizeGlobalReports, async (req, res) => {
   const range = resolveRange(rangeSchema.parse(req.query))
-  const report = await buildGlobalReport(range)
+  // MASTER → toda a frota (null); demais → só as embarcações a que têm acesso.
+  const companyIds = await accessibleCompanyIds(req.user)
+  const report = await buildGlobalReport(range, companyIds ?? undefined)
   res.json({ ...report, aiAvailable: aiInsightsService.isConfigured })
 })
 
 reportsRoutes.post('/global/insights', authorizeGlobalReports, async (req, res) => {
   const range = resolveRange(rangeSchema.parse(req.body))
-  const report = await buildGlobalReport(range)
+  const companyIds = await accessibleCompanyIds(req.user)
+  const report = await buildGlobalReport(range, companyIds ?? undefined)
   try {
     const insights = await aiInsightsService.generateGlobalInsights(report)
     res.json({ insights, generatedAt: new Date().toISOString() })

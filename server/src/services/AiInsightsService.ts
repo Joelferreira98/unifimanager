@@ -127,8 +127,8 @@ function buildGlobalUserPrompt(report: GlobalReport): string {
   return lines.join('\n')
 }
 
-const GLOBAL_SYSTEM_PROMPT = `Você é um analista de negócios sênior de uma operação de venda de vouchers de internet (hotspot) em embarcações, analisando a FROTA INTEIRA (várias embarcações).
-Recebe um relatório consolidado de todas as embarcações em um período e produz uma análise objetiva e assertiva em português do Brasil.
+const GLOBAL_SYSTEM_PROMPT = `Você é um analista de negócios sênior de uma operação de venda de vouchers de internet (hotspot) em embarcações, analisando o CONJUNTO de embarcações a que o usuário tem acesso (pode ser a frota inteira ou apenas parte dela).
+Recebe um relatório consolidado dessas embarcações em um período e produz uma análise objetiva e assertiva em português do Brasil.
 
 Contexto crítico do negócio (siga à risca):
 - A métrica que mais importa é a QUANTIDADE DE VENDAS (volume de vouchers conectados) por embarcação. Receita e ticket médio são secundários e servem só de apoio.
