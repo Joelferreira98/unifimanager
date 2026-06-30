@@ -24,26 +24,36 @@ const app = express()
 // (essencial para o rate limit por IP do login não tratar todos como 127.0.0.1).
 app.set('trust proxy', 1)
 
-// CORS restrito a uma allowlist (CORS_ORIGIN, separado por vírgula). Em produção o
-// front é servido na mesma origem (nginx) e em dev via proxy do Vite — ambos são
-// same-origin e não dependem destes cabeçalhos. Sem CORS_ORIGIN, nega cross-origin.
+// CORS: sempre permite same-origin (o navegador manda header Origin até em POST
+// same-origin) e, além disso, as origens cross-origin listadas em CORS_ORIGIN
+// (separadas por vírgula). Em prod o front é servido pelo nginx na mesma origem e
+// em dev via proxy do Vite — ambos same-origin. Origem cross não listada é negada.
 const allowedOrigins = (process.env.CORS_ORIGIN ?? '')
   .split(',')
   .map((o) => o.trim())
   .filter(Boolean)
 
-const corsOptions: CorsOptions = {
-  origin(origin, callback) {
-    // Sem header Origin (same-origin, curl, apps server-to-server) → permite.
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true)
-      return
+app.use(
+  cors((req, callback) => {
+    const origin = req.headers.origin
+    let allow = false
+    if (!origin) {
+      allow = true // sem Origin (curl, server-to-server) → permite
+    } else if (allowedOrigins.includes(origin)) {
+      allow = true // cross-origin explicitamente liberada
+    } else {
+      try {
+        allow = new URL(origin).host === req.headers.host // same-origin
+      } catch {
+        allow = false
+      }
     }
-    callback(new Error('Origem não permitida pelo CORS'))
-  },
-}
-
-app.use(cors(corsOptions))
+    // Não lança erro (evita 500): só (não) anexa os cabeçalhos CORS; o navegador
+    // bloqueia a leitura de respostas cross-origin não liberadas por conta própria.
+    const options: CorsOptions = { origin: allow }
+    callback(null, options)
+  })
+)
 // limite maior: logo/favicon trafegam como data URL (base64)
 app.use(express.json({ limit: '12mb' }))
 
